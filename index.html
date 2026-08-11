@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Special Anniversary Surprise</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background-color: #fce4ec;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 320px;
+    }
+    .hidden { display: none; }
+    
+    /* Keypad Styles */
+    .pin-display {
+      font-size: 24px;
+      letter-spacing: 5px;
+      margin-bottom: 15px;
+      min-height: 35px;
+    }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .btn {
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      background: #f8bbd0;
+      color: #880e4f;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn:active { background: #f48fb1; }
+
+    /* Action Buttons */
+    .action-btn {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .yes-btn { background: #4caf50; color: white; }
+    .no-btn { background: #f44336; color: white; }
+    .error-msg { color: #d32f2f; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Screen 1: Passcode -->
+  <div id="passcode-screen" class="card">
+    <h3>Enter a Passcode</h3>
+    <div id="pin-input" class="pin-display"></div>
+    <div class="keypad">
+      <button class="btn" onclick="press('1')">1</button>
+      <button class="btn" onclick="press('2')">2</button>
+      <button class="btn" onclick="press('3')">3</button>
+      <button class="btn" onclick="press('4')">4</button>
+      <button class="btn" onclick="press('5')">5</button>
+      <button class="btn" onclick="press('6')">6</button>
+      <button class="btn" onclick="press('7')">7</button>
+      <button class="btn" onclick="press('8')">8</button>
+      <button class="btn" onclick="press('9')">9</button>
+      <button class="btn" onclick="clearPin()">C</button>
+      <button class="btn" onclick="press('0')">0</button>
+      <button class="btn" onclick="checkPin()">✓</button>
+    </div>
+    <p id="error-text" class="error-msg"></p>
+  </div>
+
+  <!-- Screen 2: Question -->
+  <div id="question-screen" class="card hidden">
+    <h3>I made something special for you ❤️</h3>
+    <p>Do you wanna see it?</p>
+    <button class="action-btn yes-btn" onclick="showWish()">YES</button>
+    <button class="action-btn no-btn" onclick="showNoWarning()">NO</button>
+    <p id="no-msg" class="error-msg"></p>
+  </div>
+
+  <!-- Screen 3: Wish Content -->
+  <div id="wish-screen" class="card hidden">
+    <h2>HAPPY ANNIVERSARY MY LOVE! 🎉</h2>
+    <p>You are the most beautiful part of my life ❤️</p>
+    <p><i>"Virtual Hug For You!"</i></p>
+  </div>
+
+  <script>
+    const CORRECT_PIN = "1234"; // Apna custom passcode yahan set karein
+    let currentInput = "";
+
+    function press(num) {
+      if (currentInput.length < 4) {
+        currentInput += num;
+        document.getElementById('pin-input').innerText = "*".repeat(currentInput.length);
+      }
+    }
+
+    function clearPin() {
+      currentInput = "";
+      document.getElementById('pin-input').innerText = "";
+      document.getElementById('error-text').innerText = "";
+    }
+
+    function checkPin() {
+      if (currentInput === CORRECT_PIN) {
+        document.getElementById('passcode-screen').classList.add('hidden');
+        document.getElementById('question-screen').classList.remove('hidden');
+      } else {
+        document.getElementById('error-text').innerText = "WRONG PASSCODE! TRY AGAIN";
+        clearPin();
+      }
+    }
+
+    function showNoWarning() {
+      document.getElementById('no-msg').innerText = "Why did you click NO? Try YES! 😉";
+    }
+
+    function showWish() {
+      document.getElementById('question-screen').classList.add('hidden');
+      document.getElementById('wish-screen').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
