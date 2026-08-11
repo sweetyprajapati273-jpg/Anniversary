@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anniversary Surprise</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #fce4ec;
+      background-image: radial-gradient(#f8bbd0 1.2px, transparent 1.2px);
+      background-size: 18px 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      width: 320px;
+      height: 480px;
+      perspective: 1000px;
+    }
+
+    .card-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .card-wrapper.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      background: #fff;
+      border: 4px solid #f8bbd0;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      text-align: center;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    @keyframes shakeAnimation {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-15px); }
+      40%, 80% { transform: translateX(15px); }
+    }
+
+    .shake {
+      animation: shakeAnimation 0.4s ease-in-out;
+    }
+
+    .sticker {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      border-radius: 12px;
+    }
+
+    .pin-display {
+      font-size: 24px;
+      letter-spacing: 6px;
+      height: 35px;
+      color: #d81b60;
+      font-weight: bold;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 12px;
+      font-size: 17px;
+      border: none;
+      background: #f8bbd0;
+      color: #880e4f;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.85);
+      background: #f48fb1;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .action-btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+      transition: transform 0.2s;
+    }
+
+    .action-btn:active {
+      transform: scale(0.92);
+    }
+
+    .yes-btn { background: #ff80ab; color: white; }
+    .no-btn { background: #cfd8dc; color: #37474f; }
+    .retry-btn { background: #d81b60; color: white; margin-top: 15px; }
+
+    .title {
+      color: #c2185b;
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scene">
+    <div class="card-wrapper" id="cardWrapper">
+      <div class="card-face card-front" id="frontContent"></div>
+      <div class="card-face card-back" id="backContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const CORRECT_PIN = "1234"; // Yahan apna Password badal sakte ho
+    let currentInput = "";
+    let isFlipped = false;
+
+    const screens = {
+      passcode: `
+        <img src="https://media.tenor.com/gU212Jy34EAAAAAi/bear-kiss-bear-hug.gif" class="sticker" alt="Cute Bears">
+        <div class="title">Enter a passcode</div>
+        <div id="pin-input" class="pin-display"></div>
+        <div class="keypad">
+          <button class="btn" onclick="press('1')">1</button>
+          <button class="btn" onclick="press('2')">2</button>
+          <button class="btn" onclick="press('3')">3</button>
+          <button class="btn" onclick="press('4')">4</button>
+          <button class="btn" onclick="press('5')">5</button>
+          <button class="btn" onclick="press('6')">6</button>
+          <button class="btn" onclick="press('7')">7</button>
+          <button class="btn" onclick="press('8')">8</button>
+          <button class="btn" onclick="press('9')">9</button>
+          <button class="btn" onclick="clearPin()">C</button>
+          <button class="btn" onclick="press('0')">0</button>
+          <button class="btn" onclick="checkPin()">✓</button>
+        </div>
+      `,
+      wrongPass: `
+        <img src="https://media.tenor.com/db8K_G_E4kUAAAAi/sad-bear.gif" class="sticker" alt="Sad Bear">
+        <h2 style="color: #d32f2f;">WRONG PASSCODE</h2>
+        <button class="action-btn retry-btn" onclick="flipTo('passcode')">TRY AGAIN</button>
+      `,
+      question: `
+        <img src="https://media.tenor.com/6X2Bchx5-9sAAAAi/cute-bear.gif" class="sticker" alt="Special Present">
+        <div class="title">I made something special for u ❤️</div>
+        <p style="color: #880e4f; font-weight: bold;">do u wanna see it?</p>
+        <div class="btn-group">
+          <button class="action-btn yes-btn" onclick="flipTo('wish')">YES</button>
+          <button class="action-btn no-btn" onclick="flipTo('wrongNo')">NO</button>
+        </div>
+      `,
+      wrongNo: `
+        <img src="https://media.tenor.com/N2938vHk9dIAAAAi/peach-cat-crying.gif" class="sticker" alt="Crying Cat">
+        <h3 style="color: #c2185b; margin-bottom: 10px;">Why did u click no?! 🥺</h3>
+        <button class="action-btn retry-btn" onclick="flipTo('question')">TRY AGAIN</button>
+      `,
+      wish: `
+        <img src="https://media.tenor.com/vH1Wf46z17sAAAAi/hug-bear.gif" class="sticker" alt="Love Hug">
+        <h2 style="color: #c2185b;">HAPPY ANNIVERSARY MY LOVE! ❤️</h2>
+        <p style="color: #880e4f; font-size: 14px; margin-top: 10px;">You are my favorite person in the whole world! ✨</p>
+      `
+    };
+
+    document.getElementById('frontContent').innerHTML = screens.passcode;
+
+    function press(num) {
+      if (currentInput.length < 4) {
+        currentInput += num;
+        document.getElementById('pin-input').innerText = "*".repeat(currentInput.length);
+      }
+    }
+
+    function clearPin() {
+      currentInput = "";
+      const display = document.getElementById('pin-input');
+      if (display) display.innerText = "";
+    }
+
+    function checkPin() {
+      if (currentInput === CORRECT_PIN) {
+        flipTo('question');
+      } else {
+        const wrapper = document.getElementById('cardWrapper');
+        wrapper.classList.add('shake');
+        setTimeout(() => {
+          wrapper.classList.remove('shake');
+          flipTo('wrongPass');
+        }, 400);
+      }
+      clearPin();
+    }
+
+    function flipTo(screenKey) {
+      const wrapper = document.getElementById('cardWrapper');
+      const front = document.getElementById('frontContent');
+      const back = document.getElementById('backContent');
+
+      if (!isFlipped) {
+        back.innerHTML = screens[screenKey];
+        wrapper.classList.add('is-flipped');
+        isFlipped = true;
+      } else {
+        front.innerHTML = screens[screenKey];
+        wrapper.classList.remove('is-flipped');
+        isFlipped = false;
+      }
+      currentInput = "";
+    }
+  </script>
+</body>
+</html>
